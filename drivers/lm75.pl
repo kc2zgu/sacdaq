@@ -28,23 +28,34 @@ if ($i2c->checkDevice($chip))
     my $templo = ($tempreg >> 8) & 0xFF;
 
     my $tempswap = ($temphi << 8) + $templo;
+    $sensor->logmsg(sprintf "raw temperature register: 0x%04x 0b%016b", $tempswap, $tempswap);
     my $temp;
     if ($bits == 9)
     {
-        $temp = ($tempswap >> 7) / 2;
-        $sensor->set_value($temp);
+        my $tempint = $tempswap >> 7;
+        $tempint = -(512 - $tempint) if ($tempswap & 0x8000);
+        $sensor->set_value($tempint / 2);
         $sensor->set_extension(PRECISION => 0.5);
+    }
+    if ($bits == 10)
+    {
+        my $tempint = $tempswap >> 6;
+        $tempint = -(1024 - $tempint) if ($tempswap & 0x8000);
+        $sensor->set_value($tempint / 4);
+        $sensor->set_extension(PRECISION => 0.25);
     }
     elsif ($bits == 11)
     {
-        $temp = ($tempswap >> 5) / 8;
-        $sensor->set_value($temp);
+        my $tempint = $tempswap >> 5;
+        $tempint = -(2048 - $tempint) if ($tempswap & 0x8000);
+        $sensor->set_value($tempint / 8);
         $sensor->set_extension(PRECISION => 0.125);
     }
     elsif ($bits == 12)
     {
-        $temp = ($tempswap >> 4) / 16;
-        $sensor->set_value($temp);        
+        my $tempint = $tempswap >> 4;
+        $tempint = -(4096 - $tempint) if ($tempswap & 0x8000);
+        $sensor->set_value($tempint / 16);
         $sensor->set_extension(PRECISION => 0.0625);
     }
   }
