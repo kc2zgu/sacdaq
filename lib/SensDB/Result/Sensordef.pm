@@ -31,7 +31,7 @@ __PACKAGE__->table("sensordef");
 
 =head2 name
 
-  data_type: 'integer'
+  data_type: 'text'
   is_nullable: 0
 
 =head2 uuid
@@ -50,7 +50,7 @@ __PACKAGE__->add_columns(
   "localid",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "name",
-  { data_type => "integer", is_nullable => 0 },
+  { data_type => "text", is_nullable => 0 },
   "uuid",
   { data_type => "text", is_nullable => 0 },
   "dimension",
@@ -101,8 +101,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07049 @ 2018-10-29 14:25:27
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:WUycevFExhVbgrMphebAcQ
+# Created by DBIx::Class::Schema::Loader v0.07049 @ 2018-10-29 15:41:52
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:0iApjRGKpntC8qJe4G+Rpw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

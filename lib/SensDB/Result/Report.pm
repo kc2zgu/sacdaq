@@ -51,7 +51,7 @@ __PACKAGE__->table("reports");
 
 =head2 value
 
-  data_type: 'numeric'
+  data_type: 'real'
   is_nullable: 0
 
 =head2 unit
@@ -88,7 +88,7 @@ __PACKAGE__->add_columns(
   "dimension",
   { data_type => "text", is_nullable => 0 },
   "value",
-  { data_type => "numeric", is_nullable => 0 },
+  { data_type => "real", is_nullable => 0 },
   "unit",
   { data_type => "text", is_nullable => 1 },
   "driver",
@@ -117,8 +117,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07049 @ 2018-10-29 14:25:27
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:5wrAb1ibS3Tn5l0xIOZp5A
+# Created by DBIx::Class::Schema::Loader v0.07049 @ 2018-10-29 15:41:52
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:HJP6UV2jrjsiu2Hp3n3/9w
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
