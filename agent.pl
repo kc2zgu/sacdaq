@@ -3,12 +3,14 @@
 use strict;
 
 use Getopt::Std;
+use DateTime;
 
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
 use SensInstance;
 use SensLog;
+use SensDB;
 
 print "Sensor agent starting\n";
 
@@ -34,14 +36,66 @@ while (my $conf = readdir $sensorsd)
     }
 }
 
-my $log = SensLog->new("logs");
+my $log;
+my $db;
+sub log_start {
+    #$log = SensLog->new("logs");
+    my $dbfile = "logs/sensordata.sqlite";
+    if (-f $dbfile)
+    {
+        $db = SensDB->connect("dbi:SQLite:$dbfile");
+    }
+    else
+    {
+        $db = SensDB->connect("dbi:SQLite:$dbfile");
+        $db->deploy;
+    }
+}
+
+sub log_sync {
+    my $runtime = shift;
+
+    if (defined $log)
+    {
+        my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime $runtime;
+        my $logpath = sprintf("%04d-%02d-%02d.%02d.log", $year+1900, $mon+1, $mday, $hour);
+        $log->open($logpath);
+    }
+}
+
+sub log_append {
+    my $report = shift;
+    if (defined $log)
+    {
+        $log->write_report($report);
+    } elsif (defined $db)
+    {
+        my $sensordef = $db->resultset('Sensordef')->find_or_create({name => $report->{'SENSOR-NAME'},
+                                                                     uuid => $report->{'SENSOR-UUID'},
+                                                                     dimension => $report->{'DIMENSION'}},
+                                                                    {key => 'uuid_unique'});
+        my $time = $report->{TIME};
+        my $result = $report->{RESULT} eq 'SUCCESS' ? 1 : 0;
+        my $exts = join ';', map {my ($k)=/^X-(.*)$/;"$_=$report->{$_}"} sort grep {/^X-/} keys %$report;
+        my $dbreport = $sensordef->create_related(reports => {time => $time,
+                                                              result => $result,
+                                                              valid => $report->{VALID},
+                                                              dimension => $report->{DIMENSION},
+                                                              value => $report->{VALUE},
+                                                              unit => $report->{UNIT},
+                                                              driver => $report->{DRIVER},
+                                                              faults => $report->{FAULTS} // 'none',
+                                                              extensions => $exts});
+    }
+}
+
+log_start();
 
 while (1)
-  {
+{
     my $runtime = time;
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime $runtime;
-    my $logpath = sprintf("%04d-%02d-%02d.%02d.log", $year+1900, $mon+1, $mday, $hour);
-    $log->open($logpath);
+    my $dt = DateTime->from_epoch(epoch => $runtime);
+    log_sync($runtime);
 
     for my $sensor(@sensors)
     {
@@ -57,13 +111,13 @@ while (1)
 		eval
                 {
 		    print "Collecting $sensor->{name}\n";
-                    my $report = $sensor->report($runtime);
+                    my $report = $sensor->report($dt);
 
                     for my $k(sort keys %$report)
                     {
                         print "$k: $report->{$k}\n";
                     }
-                    $log->write_report($report);
+                    log_append($report);
                 };
 		if ($@)
                 {
