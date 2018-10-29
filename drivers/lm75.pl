@@ -7,7 +7,7 @@ use SensDrv;
 use Device::I2C;
 use Fcntl;
 
-my $sensor = SensDrv->new('LM75 temperature', 0.01,
+my $sensor = SensDrv->new('LM75 temperature', 0.02,
                           bus => 1, chipaddr => '0x48', bits => 9);
 
 my $bus = $sensor->get('bus');
