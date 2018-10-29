@@ -58,6 +58,7 @@ sub report {
             my ($k, $v) = split /=/, $sensline;
             $repvalues{$k} = $v;
         }
+        $repvalues{RESULT} = 'FAIL' unless defined ($repvalues{VALID});
     }
     else
     {
