@@ -76,7 +76,7 @@ sub log_append {
                                                                     {key => 'uuid_unique'});
         my $time = $report->{TIME};
         my $result = $report->{RESULT} eq 'SUCCESS' ? 1 : 0;
-        my $exts = join ';', map {my ($k)=/^X-(.*)$/;"$_=$report->{$_}"} sort grep {/^X-/} keys %$report;
+        my $exts = join ';', map {my ($k)=/^X-(.*)$/;"$k=$report->{$_}"} sort grep {/^X-/} keys %$report;
         my $dbreport = $sensordef->create_related(reports => {time => $time,
                                                               result => $result,
                                                               valid => $report->{VALID},
@@ -117,7 +117,43 @@ while (1)
                     {
                         print "$k: $report->{$k}\n";
                     }
-                    log_append($report);
+                    if ($sensor->{average})
+                    {
+                        push @{$sensor->{avg_samples}}, $report;
+                        if (@{$sensor->{avg_samples}} >= $sensor->{average})
+                        {
+                            my $avgcount = 0;
+                            my $total = 0;
+                            for my $sample(@{$sensor->{avg_samples}})
+                            {
+                                if ($sample->{VALID})
+                                {
+                                    $total += $sample->{VALUE};
+                                    $avgcount++;
+                                }
+                            }
+                            if ($avgcount >= 1)
+                            {
+                                my $avgval = $total / $avgcount;
+                                print "Average of $avgcount samples: $avgval\n";
+                                $report->{VALUE} = $avgval;
+                                $report->{'X-AVERAGE'} = $avgcount;
+                                $report->{VALID} = 1;
+                                log_append($report);
+                            }
+                            else
+                            {
+                                print "No valid samples to average\n";
+                                $report->{VALID} = 0;
+                                $report->{VALUE} = 0;
+                            }
+                            $sensor->{avg_samples} = [];
+                        }
+                    }
+                    else
+                    {
+                        log_append($report);
+                    }
                 };
 		if ($@)
                 {
