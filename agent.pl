@@ -11,6 +11,23 @@ use lib "$FindBin::Bin/lib";
 use SensInstance;
 use SensLog;
 use SensDB;
+use HTTP::Tiny;
+
+my $blinkserv = "http://localhost:8020";
+my $ledpin = 2;
+my $http = HTTP::Tiny->new;
+sub led_open {
+	print "Activating LED GPIO\n";
+	$http->get("$blinkserv/open?pin=$ledpin");
+}
+sub led_on {
+	print "LED On\n";
+	$http->get("$blinkserv/set?pin=$ledpin&value=1");
+}
+sub led_off {
+	print "LED Off\n";
+	$http->get("$blinkserv/set?pin=$ledpin&value=0");
+}
 
 print "Sensor agent starting\n";
 
@@ -91,11 +108,15 @@ sub log_append {
 
 log_start();
 
+led_open();
+
 while (1)
 {
     my $runtime = time;
     my $dt = DateTime->from_epoch(epoch => $runtime);
     log_sync($runtime);
+
+    my $led = 0;
 
     for my $sensor(@sensors)
     {
@@ -108,15 +129,22 @@ while (1)
 	    if ($runtime >= $sensor->{time_due})
             {
 		$sensor->{time_due} += $sensor->{poll};
+		if ($led == 0)
+		{
+			led_on();
+			$led = 1;
+		}
 		eval
                 {
 		    print "Collecting $sensor->{name}\n";
                     my $report = $sensor->report($dt);
 
-                    for my $k(sort keys %$report)
-                    {
-                        print "$k: $report->{$k}\n";
-                    }
+                    #for my $k(sort keys %$report)
+                    #{
+                    #    print "$k: $report->{$k}\n";
+                    #}
+		    print join ' ', map {"$_=$report->{$_}"} sort keys %$report;
+		    print "\n";
                     if ($sensor->{average})
                     {
                         push @{$sensor->{avg_samples}}, $report;
@@ -163,8 +191,9 @@ while (1)
         }
 	else
         {
-	    print "Sensor $sensor->{name} not enabled\n";
+	    #print "Sensor $sensor->{name} not enabled\n";
         }
     }
+	led_off() if $led == 1;
     sleep 5;
 }
