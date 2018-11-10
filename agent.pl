@@ -9,38 +9,75 @@ use FindBin;
 use lib "$FindBin::Bin/lib";
 
 use SensInstance;
-use SensLog;
 use SensDB;
 
-print "Sensor agent starting\n";
+my $logfd;
+
+sub logmsg {
+    my $msg = shift;
+
+    if (defined $logfd)
+    {
+        local $| = 1;
+        print $logfd "[AGENT] $msg\n";
+    }
+    else
+    {
+        print STDERR "[AGENT] $msg\n";
+    }
+}
+
+SensInstance::setlog(\&logmsg);
+
+my %opts;
+getopts('r:bl:', \%opts);
+
+my $root = $FindBin::Bin;
+if ($opts{r})
+{
+    $root = $opts{r};
+}
+
+logmsg "SACDaq agent starting";
+logmsg "Root directory: $root";
 
 my @sensors;
-print "Populating sensors\n";
+logmsg "Populating sensors";
 
-opendir my $sensorsd, "sensors.d";
+opendir my $sensorsd, "$root/sensors.d";
 while (my $conf = readdir $sensorsd)
 {
     if ($conf =~ /\.yaml$/)
     {
-	print "Reading $conf\n";
-	my $instance = SensInstance->new("sensors.d/$conf");
+        logmsg "Reading $conf";
+        my $instance = SensInstance->new("sensors.d/$conf");
         if (defined $instance)
         {
             push @sensors, $instance;
-            print "Loaded $instance->{name}\n";
+            logmsg "Loaded $instance->{name}";
         }
         else
         {
-            print "Invalid definition in $conf\n";
+            logmsg "Invalid definition in $conf";
         }
     }
 }
 
-my $log;
+unless (-d "$root/logs")
+{
+    logmsg "Creating log directory $root/logs";
+    mkdir "$root/logs";
+}
+
+if ($opts{l})
+{
+    open $logfd, '>>', $opts{l};
+}
+
 my $db;
 sub log_start {
-    #$log = SensLog->new("logs");
     my $dbfile = "logs/sensordata.sqlite";
+    logmsg "Opening SQLite satabase $dbfile";
     if (-f $dbfile)
     {
         $db = SensDB->connect("dbi:SQLite:$dbfile");
@@ -52,23 +89,9 @@ sub log_start {
     }
 }
 
-sub log_sync {
-    my $runtime = shift;
-
-    if (defined $log)
-    {
-        my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime $runtime;
-        my $logpath = sprintf("%04d-%02d-%02d.%02d.log", $year+1900, $mon+1, $mday, $hour);
-        $log->open($logpath);
-    }
-}
-
 sub log_append {
     my $report = shift;
-    if (defined $log)
-    {
-        $log->write_report($report);
-    } elsif (defined $db)
+    if (defined $db)
     {
         my $sensordef = $db->resultset('Sensordef')->find_or_create({name => $report->{'SENSOR-NAME'},
                                                                      uuid => $report->{'SENSOR-UUID'},
@@ -95,7 +118,6 @@ while (1)
 {
     my $runtime = time;
     my $dt = DateTime->from_epoch(epoch => $runtime);
-    log_sync($runtime);
 
     for my $sensor(@sensors)
     {
@@ -110,13 +132,10 @@ while (1)
 		$sensor->{time_due} += $sensor->{poll};
 		eval
                 {
-		    print "Collecting $sensor->{name}\n";
-                    my $report = $sensor->report($dt);
+		    logmsg "Collecting $sensor->{name}";
+                    my $report = $sensor->report($dt, $root);
 
-                    for my $k(sort keys %$report)
-                    {
-                        print "$k: $report->{$k}\n";
-                    }
+                    logmsg join '; ', map {"$_=$report->{$_}"} sort keys %$report;
                     if ($sensor->{average})
                     {
                         push @{$sensor->{avg_samples}}, $report;
@@ -135,7 +154,7 @@ while (1)
                             if ($avgcount >= 1)
                             {
                                 my $avgval = $total / $avgcount;
-                                print "Average of $avgcount samples: $avgval\n";
+                                logmsg "Average of $avgcount samples: $avgval";
                                 $report->{VALUE} = $avgval;
                                 $report->{'X-AVERAGE'} = $avgcount;
                                 $report->{VALID} = 1;
@@ -143,7 +162,7 @@ while (1)
                             }
                             else
                             {
-                                print "No valid samples to average\n";
+                                logmsg "No valid samples to average";
                                 $report->{VALID} = 0;
                                 $report->{VALUE} = 0;
                             }
@@ -157,13 +176,13 @@ while (1)
                 };
 		if ($@)
                 {
-		    print "Report failed: $@\n";
+		    logmsg "Report failed: $@";
                 }
             }
         }
 	else
         {
-	    print "Sensor $sensor->{name} not enabled\n";
+	    # logmsg "Sensor $sensor->{name} not enabled";
         }
     }
     sleep 5;

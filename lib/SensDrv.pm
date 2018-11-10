@@ -4,10 +4,19 @@ use strict;
 
 my $apiver = '1.0';
 
+my $logfd;
 sub logmsg {
     my $msg = shift;
     $msg = shift if ref $msg;
-    print STDERR "[SENSDRV] $msg\n";
+    if (defined $logfd)
+    {
+        local $| = 1;
+        print $logfd "[SENSDRV] $msg\n";
+    }
+    else
+    {
+        print STDERR "[SENSDRV] $msg\n";
+    }
 }
 
 sub new {
@@ -16,10 +25,23 @@ sub new {
     my $drivername = shift;
     my $driverver = shift;
     my %defargs = @_;
-    my @runargs = @ARGV;
+    my %runargs;
+
+    for my $runarg(@ARGV)
+    {
+        my ($key, $value) = split '=', $runarg;
+        #logmsg "runtime arg: $key = $value";
+        $runargs{$key} = $value;
+    }
+
     my $self = {args => {}, driver => [$drivername, $driverver],
                 value => 0, valid => 0, dimension => 'NULL', unit => 'NULL',
                 extensions => {}};
+
+    if (defined $runargs{log})
+    {
+        open $logfd, '>>', $runargs{log};
+    }
 
     logmsg "driver: $self->{driver}->[0]/$self->{driver}->[1]";
 
@@ -29,11 +51,10 @@ sub new {
         $self->{args}->{$key} = $defargs{$key};
     }
 
-    for my $runarg(@runargs)
+    for my $key(sort keys %runargs)
     {
-        my ($key, $value) = split '=', $runarg;
-        logmsg "runtime arg: $key = $value";
-        $self->{args}->{$key} = $value;
+        logmsg "runtime arg: $key = $runargs{$key}";
+        $self->{args}->{$key} = $runargs{$key};
     }
 
     bless $self, $class;
