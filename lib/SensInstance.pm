@@ -20,7 +20,7 @@ sub new {
     my $uuid;
     eval {$uuid = read_file("sensors.d/$self->{name}.uuid")};
     chomp $uuid;
-    if (is_uuid_string($uuid))
+    if (defined $uuid && is_uuid_string($uuid))
     {
         $self->{uuid} = $uuid;
     }
