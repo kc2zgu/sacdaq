@@ -54,6 +54,14 @@ sub new {
     bless $self, $class;
 }
 
+sub new_direct {
+  my ($class, $driver, @args) = @_;
+
+  my $self = {driver => $driver, args => [@args]};
+
+  bless $self, $class;
+}
+
 sub report {
     my ($self, $time, $datadir) = @_;
 
@@ -70,7 +78,7 @@ sub report {
     {
         my $repdata;
         $ENV{PERL5LIB} = $libpath;
-        run ["$drvfile", @{$self->{args}}, "log=$logfile"], \undef, \$repdata;
+        run ["$drvfile", @{$self->{args}}, defined ($datadir) ? "log=$logfile" : ()], \undef, \$repdata;
         $repvalues{RESULT} = 'SUCCESS';
         for my $sensline (split "\n", $repdata)
         {
