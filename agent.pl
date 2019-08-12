@@ -170,39 +170,21 @@ while (1)
 
                     if ($sensor->{average})
                     {
-                        push @{$sensor->{avg_samples}}, $report;
-                        if (@{$sensor->{avg_samples}} >= $sensor->{average})
+                        $sensor->push_sample($report);
+                        if ($sensor->sample_count >= $sensor->{average})
                         {
-                            my $avgcount = 0;
-                            my $total = 0;
-                            for my $sample(@{$sensor->{avg_samples}})
-                            {
-                                if ($sample->{VALID})
-                                {
-                                    $total += $sample->{VALUE};
-                                    $avgcount++;
-                                }
-                            }
-                            if ($avgcount >= 1)
-                            {
-                                my $avgval = $total / $avgcount;
-                                logmsg "Average of $avgcount samples: $avgval";
-                                $report->{VALUE} = $avgval;
-                                $report->{'X-AVERAGE'} = $avgcount;
-                                $report->{VALID} = 1;
-                                log_append($report);
-                            }
-                            else
-                            {
-                                logmsg "No valid samples to average";
-                                $report->{VALID} = 0;
-                                $report->{VALUE} = 0;
-                            }
-                            $sensor->{avg_samples} = [];
+			    my $report = $sensor->get_average();
+			    if (defined $report)
+			    {
+				logmsg "Averaged value: $report->{VALUE}";
+				log_append($report);
+			    }
+                            $sensor->clear_samples();			    
                         }
                     }
                     else
                     {
+			logmsg "Saving report";
                         log_append($report);
                     }
                 };
