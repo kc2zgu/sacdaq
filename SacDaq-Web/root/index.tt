@@ -1,0 +1,16 @@
+<html>
+  <head>
+    <title>SacDaq Dashboard</title>
+  </head>
+  
+  <body>
+    <h1>SacDaq Dashboard</h1>
+
+    <dl>
+      [% FOREACH sensor IN sensors -%]
+      <dt>[% sensor.name %]</dt>
+      <dd>[% sensor.last_value %] at [% sensor.last_datetime %]</dd>
+      [% END -%]
+    </dl>
+  </body>
+</html>
