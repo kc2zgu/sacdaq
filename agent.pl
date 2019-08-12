@@ -10,6 +10,7 @@ use lib "$FindBin::Bin/lib";
 
 use SensInstance;
 use SensDB;
+use TimeSync;
 use HTTP::Tiny;
 
 my $logfd;
@@ -133,63 +134,7 @@ log_start();
 
 led_open();
 
-sub sysfs_get {
-    my $path = shift;
-    open my $fd, '<', $path or return undef;
-    my $data = <$fd> or return undef;
-    chomp $data;
-    return $data;
-}
-
-sub checktime_rtc {
-    logmsg "Checking RTC time status";
-
-    if (-d "/sys/class/rtc/rtc0")
-    {
-        my $rtcname = sysfs_get('/sys/class/rtc/rtc0/name');
-        logmsg "Found RTC $rtcname";
-        my $rtcdate = sysfs_get('/sys/class/rtc/rtc0/date');
-        logmsg "RTC date: $rtcdate";
-        if ($rtcdate =~ /^(\d{4})/)
-        {
-            logmsg "RTC year: $1";
-            if ($1 > 2010)
-            {
-                return 1;
-            }
-        }
-    }
-    else
-    {
-        logmsg "No RTC device available";
-        return 0;
-    }
-    return 0;
-}
-
-sub checktime_ntp {
-    logmsg "Checking NTP time status";
-
-    if (system('chronyc', 'waitsync', '1', '10') == 0)
-    {
-        logmsg "Synchronized";
-        return 1;
-    }
-    logmsg "Not Synchronized";
-    return 0;
-}
-
-if (checktime_rtc())
-{
-    
-} else
-{
-    while (1)
-    {
-        last if (checktime_ntp());
-        sleep 3;
-    }
-}
+TimeSync::timesync_wait();
 
 logmsg "Time synchronized";
 
