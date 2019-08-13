@@ -43,6 +43,7 @@ sub checktime_ntp {
         return 1;
     }
     main::logmsg("Not Synchronized");
+    sleep 1;
     return 0;
 }
 

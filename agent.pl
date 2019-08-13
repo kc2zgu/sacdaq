@@ -31,11 +31,11 @@ sub logmsg {
 }
 
 my $blinkserv = "http://localhost:8182";
-my $ledpin = 13;
+my $ledpin = 'led1';
 my $http = HTTP::Tiny->new;
 sub led_open {
     logmsg "Activating LED GPIO";
-    $http->get("$blinkserv/open?pin=$ledpin");
+    #$http->get("$blinkserv/open?pin=$ledpin");
 }
 sub led_on {
     logmsg "LED On";
