@@ -11,6 +11,7 @@ use lib "$FindBin::Bin/lib";
 use SensInstance;
 use SensDB;
 use TimeSync;
+use RepQueue;
 use HTTP::Tiny;
 
 my $logfd;
@@ -138,6 +139,9 @@ TimeSync::timesync_wait();
 
 logmsg "Time synchronized";
 
+my $repq = RepQueue->new;
+$repq->{db} = $db;
+
 while (1)
 {
     my $runtime = time;
@@ -177,7 +181,7 @@ while (1)
 			    if (defined $report)
 			    {
 				logmsg "Averaged value: $report->{VALUE}";
-				log_append($report);
+				$repq->push($report);
 			    }
                             $sensor->clear_samples();			    
                         }
@@ -185,7 +189,7 @@ while (1)
                     else
                     {
 			logmsg "Saving report";
-                        log_append($report);
+                        $repq->push($report);
                     }
                 };
 		if ($@)
@@ -199,6 +203,7 @@ while (1)
 	    # logmsg "Sensor $sensor->{name} not enabled";
         }
     }
+    $repq->flush();
 	led_off() if $led == 1;
     sleep 2;
 }
