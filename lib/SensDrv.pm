@@ -19,6 +19,20 @@ sub logmsg {
     }
 }
 
+my %calmode =
+    (
+     'gainoff' => sub {
+	 my ($value, $gain, $offset) = @_;
+
+	 return $value * $gain + $offset;
+     },
+     '2pt' => sub {
+	 my ($value, $i1, $o1, $i2, $o2) = @_;
+
+	 return ($o2 - $o1) / ($i2 - $i1) * ($value - $i1) + ($o1 - $i1);
+     }
+    );
+
 sub new {
     my $class = shift;
 
@@ -81,8 +95,22 @@ sub set_unit {
     $self->{unit} = $unit;
 }
 
+sub _calibrate_value {
+    my ($self, $value) = @_;
+
+    my $calfunc = $calmode{$self->{args}->{calmode}};
+    my @calparams = split ',', $self->{args}->{calparams};
+
+    return $calfunc->($value, @calparams);
+}
+
 sub set_value {
     my ($self, $value) = @_;
+
+    if ($self->{args}->{calmode})
+    {
+	$value = $self->_calibrate_value($value);
+    }
 
     $self->{value} = $value;
     $self->{valid} = 1;
