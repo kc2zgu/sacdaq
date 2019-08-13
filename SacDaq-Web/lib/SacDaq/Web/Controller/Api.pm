@@ -25,7 +25,7 @@ Catalyst Controller.
 =cut
 
 my $defaultver = 1;
-my $maxsync = 200;
+my $maxsync = 500;
 
 sub index :Path :Args(0) {
     my ( $self, $c ) = @_;
@@ -80,6 +80,7 @@ sub init :PathPart('api') :Chained('/') :CaptureArgs(0) {
         my $method = $c->req->method;
         $c->log->debug("method $method not allowed");
     }
+    $c->stash->{current_view} = 'JSON';
 }
 
 sub sensorstatus :Chained('init') :Args(1) {

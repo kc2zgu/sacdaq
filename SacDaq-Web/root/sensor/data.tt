@@ -1,0 +1,21 @@
+<html>
+  <head>
+    <title>Sensor Data</title>
+  </head>
+  
+  <body>
+    <h1>Sensor Data for [% sensordef.name %]</h1>
+
+    <table>
+      <tr>
+        <th>Time</th><th>Value</th>
+      </tr>
+[% FOREACH report IN reports -%]
+      <tr>
+        <td>[% report.time %]</td><td>[% report.value %] [% report.unit %]</td>
+      </tr>
+[% END -%]
+    </table>
+
+  </body>
+</html>

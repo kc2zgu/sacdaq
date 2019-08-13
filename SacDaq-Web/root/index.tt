@@ -8,7 +8,7 @@
 
     <dl>
       [% FOREACH sensor IN sensors -%]
-      <dt>[% sensor.name %]</dt>
+      <dt><a href="/sensor/[% sensor.uuid %]/data">[% sensor.name %]</a></dt>
       <dd>[% sensor.last_value %] at [% sensor.last_datetime %]</dd>
       [% END -%]
     </dl>
