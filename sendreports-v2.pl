@@ -13,7 +13,13 @@ use ApiClient;
 my $dbfile = "logs/sensordata.sqlite";
 my $db = SensDB->connect("dbi:SQLite:$dbfile");
 
-my $api = ApiClient->new("http://eternium.local:3000/api/");
+my $apihost = "http://moclus-sacdaq.local:3000/api/";
+if (exists $ENV{DAQ_API})
+{
+$apihost = $ENV{DAQ_API};
+}
+
+my $api = ApiClient->new($apihost);
 
 my @sensordefs = $db->resultset('Sensordef')->all;
 
@@ -54,25 +60,34 @@ for my $def(@sensordefs)
         if (defined $res->{last_datetime})
         {
             print "Searching for new reports\n";
-            $reports_rs = $def->search_related('reports', {time => {'>', $res->{last_datetime}}}, {order_by => {-asc => 'time'}});
+            $reports_rs = $def->search_related('reports', {time => {'>', $res->{last_datetime}}}, {order_by => {-asc => 'time'}, rows => 5000});
         }
         else
         {
             print "Searching all reports\n";
-            $reports_rs = $def->search_related('reports', {}, {order_by => {-asc => 'time'}});
+            $reports_rs = $def->search_related('reports', {}, {order_by => {-asc => 'time'}, rows => 5000});
         }
         my @reportlist;
         while (my $report = $reports_rs->next)
         {
             my $time = $report->time;
-            print "Fetched report for $time\n";
+	    my $count = @reportlist;
+            print "Fetched report for $time ($count)\n";
             push @reportlist, $report;
-
-            if (@reportlist >= $synclimit)
+	}
+	$reports_rs = undef;
+	my $repcount = @reportlist;
+	print "$repcount reports to sync\n";
+	my @reportbatch;
+	while (@reportlist > 0)
+	{
+	    push @reportbatch, shift @reportlist;
+            if (@reportbatch >= $synclimit)
             {
-                my $repcount = @reportlist;
-                print "Sending $repcount reports\n";
-                my $res = $api->sendreports($uuid, $def->name, @reportlist);
+                my $repcount = @reportbatch;
+		my $starttime = $reportbatch[0]->time;
+                print "Sending $repcount reports $starttime\n";
+                my $res = $api->sendreports($uuid, $def->name, @reportbatch);
                 if ($res->{status} eq 'success')
                 {
                     if ($res->{inserted} != $repcount)
@@ -84,14 +99,14 @@ for my $def(@sensordefs)
                 {
                     die "Error submitting reports: $res->{error}\n";
                 }
-                @reportlist = ();
+                @reportbatch = ();
             }
         }
-        if (@reportlist > 0)
+        if (@reportbatch > 0)
         {
-            my $repcount = @reportlist;
+            my $repcount = @reportbatch;
             print "Sending $repcount reports\n";
-            my $res = $api->sendreports($uuid, $def->name, @reportlist);
+            my $res = $api->sendreports($uuid, $def->name, @reportbatch);
             if ($res->{status} eq 'success')
             {
                 if ($res->{inserted} != $repcount)
