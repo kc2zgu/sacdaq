@@ -3,6 +3,7 @@
 use strict;
 
 use DateTime;
+use DateTime::Format::ISO8601;
 
 use FindBin;
 use lib "$FindBin::Bin/lib";
@@ -36,9 +37,9 @@ for my $def(@sensordefs)
     }
     else
     {
-        my ($lastrep) = $def->search_related('reports', {}, 
-                                             {order_by => {-desc=>'time'}, 
-                                              rows => 1}); 
+        my ($lastrep) = $def->search_related('reports', {},
+                                             {order_by => {-desc=>'time'},
+                                              rows => 1});
         if ($lastrep->time gt $res->{last_datetime})
         {
             print "New reports in local database\n";
@@ -59,8 +60,11 @@ for my $def(@sensordefs)
         my $reports_rs;
         if (defined $res->{last_datetime})
         {
-            print "Searching for new reports\n";
-            $reports_rs = $def->search_related('reports', {time => {'>', $res->{last_datetime}}}, {order_by => {-asc => 'time'}, rows => 5000});
+	    my $last_dt = DateTime::Format::ISO8601->parse_datetime($res->{last_datetime});
+	    $last_dt = $db->storage->datetime_parser->format_datetime($last_dt);
+            print "Searching for new reports from $last_dt\n";
+            $reports_rs = $def->search_related('reports',
+		{time => {'>', $last_dt}}, {order_by => {-asc => 'time'}, rows => 5000});
         }
         else
         {
