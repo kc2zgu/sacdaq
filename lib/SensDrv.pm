@@ -71,6 +71,13 @@ sub new {
         $self->{args}->{$key} = $runargs{$key};
     }
 
+    if (exists $self->{args}->{calibration})
+    {
+        my ($calmode, @params) = split ',', $self->{args}->{calibration};
+        $self->{args}->{calmode} = $calmode;
+        $self->{args}->{calparams} = \@params;
+    }
+
     bless $self, $class;
 }
 
@@ -99,7 +106,11 @@ sub _calibrate_value {
     my ($self, $value) = @_;
 
     my $calfunc = $calmode{$self->{args}->{calmode}};
-    my @calparams = split ',', $self->{args}->{calparams};
+    unless (ref $calfunc)
+    {
+        logmsg "Calibration mode $self->{args}->{calmode} not supported";
+    }
+    my @calparams = @{$self->{args}->{calparams}};
 
     return $calfunc->($value, @calparams);
 }
