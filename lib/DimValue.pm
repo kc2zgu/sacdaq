@@ -16,7 +16,7 @@ my %units = (
     Celsius => ['TEMP', 'C', sub { $_[0] - 273.15 }, sub { $_[0] + 273.15 }],
     Fahrenheit => ['TEMP', 'F', sub { $_[0] * 1.8 - 459.67 }, sub { ($_[0] + 459.67) / 1.8 }],
     Rankine => ['TEMP', 'R', sub { $_[0] * 1.8 }, sub { $_[0] / 1.8 }],
-    Percent = ['RH', '%'],
+    Percent => ['RH', '%'],
     Volt => ['VOLT', 'V'],
     Amp => ['CURR', 'A'],
     );
@@ -33,7 +33,6 @@ sub new {
 	if ($self->{DIMENSION} ne $udim)
 	{
 	    $self->{DIMENSION} = $udim;
-	    print "Corrected dimension to $udim\n";
 	}
     }
 
@@ -73,9 +72,7 @@ sub convert {
     }
 
     my $nu = $dims{$dim}->[1];
-    print "Native unit for $dim: $nu\n";
     my $nv = ($self->{UNIT} eq $nu) ? $self->{VALUE} : $units{$self->{UNIT}}->[3]->($self->{VALUE});
-    print "Value: $nv $nu\n";
     
     my $cv = $units{$unit}->[2]->($nv);
     return $cv;
