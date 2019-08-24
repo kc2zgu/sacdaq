@@ -19,6 +19,20 @@ sub logmsg {
     }
 }
 
+my %calmode =
+    (
+     'gainoff' => sub {
+	 my ($value, $gain, $offset) = @_;
+
+	 return $value * $gain + $offset;
+     },
+     '2pt' => sub {
+	 my ($value, $i1, $o1, $i2, $o2) = @_;
+
+	 return ($o2 - $o1) / ($i2 - $i1) * ($value - $i1) + ($o1 - $i1);
+     }
+    );
+
 sub new {
     my $class = shift;
 
@@ -57,6 +71,13 @@ sub new {
         $self->{args}->{$key} = $runargs{$key};
     }
 
+    if (exists $self->{args}->{calibration})
+    {
+        my ($calmode, @params) = split ',', $self->{args}->{calibration};
+        $self->{args}->{calmode} = $calmode;
+        $self->{args}->{calparams} = \@params;
+    }
+
     bless $self, $class;
 }
 
@@ -81,8 +102,26 @@ sub set_unit {
     $self->{unit} = $unit;
 }
 
+sub _calibrate_value {
+    my ($self, $value) = @_;
+
+    my $calfunc = $calmode{$self->{args}->{calmode}};
+    unless (ref $calfunc)
+    {
+        logmsg "Calibration mode $self->{args}->{calmode} not supported";
+    }
+    my @calparams = @{$self->{args}->{calparams}};
+
+    return $calfunc->($value, @calparams);
+}
+
 sub set_value {
     my ($self, $value) = @_;
+
+    if ($self->{args}->{calmode})
+    {
+	$value = $self->_calibrate_value($value);
+    }
 
     $self->{value} = $value;
     $self->{valid} = 1;

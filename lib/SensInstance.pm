@@ -54,6 +54,14 @@ sub new {
     bless $self, $class;
 }
 
+sub new_direct {
+  my ($class, $driver, @args) = @_;
+
+  my $self = {driver => $driver, args => [@args]};
+
+  bless $self, $class;
+}
+
 sub report {
     my ($self, $time, $datadir) = @_;
 
@@ -70,7 +78,7 @@ sub report {
     {
         my $repdata;
         $ENV{PERL5LIB} = $libpath;
-        run ["$drvfile", @{$self->{args}}, "log=$logfile"], \undef, \$repdata;
+        run ["$drvfile", @{$self->{args}}, defined ($datadir) ? "log=$logfile" : ()], \undef, \$repdata;
         $repvalues{RESULT} = 'SUCCESS';
         for my $sensline (split "\n", $repdata)
         {
@@ -85,6 +93,70 @@ sub report {
         $repvalues{RESULT} = 'FAIL';
     }
     return \%repvalues;
+}
+
+sub clear_samples {
+    my $self = shift;
+
+    $self->{samples} = [];
+}
+
+sub push_sample {
+    my ($self, $report) = @_;
+
+    push @{$self->{samples}}, $report;
+    logmsg "Pushed sample $report->{VALUE}";
+}
+
+sub sample_count {
+    my $self = shift;
+    return scalar @{$self->{samples}};
+}
+
+sub get_average {
+    my $self = shift;
+
+    my @samples = @{$self->{samples}};
+    if (@samples == 0)
+    {
+	logmsg "No samples to average";
+	return undef;
+    }
+    elsif (@samples == 1)
+    {
+	logmsg "One sample average: $samples[0]->{VALUE}";
+	return $samples[0];
+    }
+    else
+    {
+	my $avgcount = 0;
+	my $total = 0;
+	my $report = {%{$samples[0]}};
+	for my $sample(@samples)
+	{
+	    if ($sample->{VALID})
+	    {
+		$total += $sample->{VALUE};
+		$avgcount++;
+	    }
+	}
+	if ($avgcount >= 1)
+	{
+	    my $avgval = $total / $avgcount;
+	    logmsg "Average of $avgcount samples: $avgval";
+	    $report->{VALUE} = $avgval;
+	    $report->{'X-AVERAGE'} = $avgcount;
+	    $report->{VALID} = 1;
+	    return $report;
+	}
+	else
+	{
+	    logmsg "No valid samples to average";
+	    $report->{VALID} = 0;
+	    $report->{VALUE} = 0;
+	    return $report;
+	}
+    }
 }
 
 

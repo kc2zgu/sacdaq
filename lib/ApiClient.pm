@@ -58,7 +58,7 @@ sub sendreports {
     my @jsonreports;
     for my $report(@reports)
     {
-        push @jsonreports, {time => $report->time, 
+        push @jsonreports, {time => $report->time . '',
                             result => $report->result, 
                             valid => $report->valid, 
                             dimension => $report->dimension, 

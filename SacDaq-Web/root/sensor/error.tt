@@ -1,0 +1,13 @@
+<html>
+  <head>
+    <title>SacDaq - Error</title>
+  </head>
+  
+  <body>
+    <h1>SacDaq - Error</h1>
+
+    <p>
+	[% error_string %]
+    </p>
+  </body>
+</html>

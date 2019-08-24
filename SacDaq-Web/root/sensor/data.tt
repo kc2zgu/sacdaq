@@ -1,0 +1,16 @@
+[% SET page_title = "Sensor Data for $sensordef.name" %]
+[% INCLUDE common/header.tt %]
+
+    <table>
+      <tr>
+        <th class="time-cell">Time</th><th>Value</th>
+      </tr>
+[% FOREACH report IN reports -%]
+      <tr>
+        <td><span class="numeric">[% local_time(report.time) %]</span></td>
+	<td><span class="numeric">[% report.dimvalue.convert_format(display_unit) %]</span></td>
+      </tr>
+[% END -%]
+    </table>
+    
+[% INCLUDE common/footer.tt %]

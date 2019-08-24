@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>[% page_title %] - SacDaq</title>
+    <link rel="stylesheet" href="[% c.uri_for("/static/css/sacdaq.css") %]" type="text/css" />
+  </head>
+
+  <body>
+    <div id="header">
+      <h1 id="sitename"><a href="[% c.uri_for("/") %]">SacDaq</a></h1>
+      <h2>[% page_title %]</h2>
+    </div>
+
+    <div id="content">

@@ -1,0 +1,9 @@
+[% SET page_title = "Dashboard" %]
+[% INCLUDE common/header.tt %]
+    <dl>
+      [% FOREACH sensor IN sensors -%]
+      <dt><a href="/sensor/[% sensor.uuid %]/data">[% sensor.name %]</a></dt>
+      <dd>[% sensor.last_value %] at [% local_time(sensor.last_datetime) %]</dd>
+      [% END -%]
+    </dl>
+[% INCLUDE common/footer.tt %]

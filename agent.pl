@@ -10,6 +10,8 @@ use lib "$FindBin::Bin/lib";
 
 use SensInstance;
 use SensDB;
+use TimeSync;
+use RepQueue;
 use HTTP::Tiny;
 
 my $logfd;
@@ -28,12 +30,12 @@ sub logmsg {
     }
 }
 
-my $blinkserv = "http://localhost:8020";
-my $ledpin = 2;
+my $blinkserv = "http://localhost:8182";
+my $ledpin = 'led1';
 my $http = HTTP::Tiny->new;
 sub led_open {
     logmsg "Activating LED GPIO";
-    $http->get("$blinkserv/open?pin=$ledpin");
+    #$http->get("$blinkserv/open?pin=$ledpin");
 }
 sub led_on {
     logmsg "LED On";
@@ -133,6 +135,13 @@ log_start();
 
 led_open();
 
+TimeSync::timesync_wait();
+
+logmsg "Time synchronized";
+
+my $repq = RepQueue->new;
+$repq->{db} = $db;
+
 while (1)
 {
     my $runtime = time;
@@ -165,40 +174,22 @@ while (1)
 
                     if ($sensor->{average})
                     {
-                        push @{$sensor->{avg_samples}}, $report;
-                        if (@{$sensor->{avg_samples}} >= $sensor->{average})
+                        $sensor->push_sample($report);
+                        if ($sensor->sample_count >= $sensor->{average})
                         {
-                            my $avgcount = 0;
-                            my $total = 0;
-                            for my $sample(@{$sensor->{avg_samples}})
-                            {
-                                if ($sample->{VALID})
-                                {
-                                    $total += $sample->{VALUE};
-                                    $avgcount++;
-                                }
-                            }
-                            if ($avgcount >= 1)
-                            {
-                                my $avgval = $total / $avgcount;
-                                logmsg "Average of $avgcount samples: $avgval";
-                                $report->{VALUE} = $avgval;
-                                $report->{'X-AVERAGE'} = $avgcount;
-                                $report->{VALID} = 1;
-                                log_append($report);
-                            }
-                            else
-                            {
-                                logmsg "No valid samples to average";
-                                $report->{VALID} = 0;
-                                $report->{VALUE} = 0;
-                            }
-                            $sensor->{avg_samples} = [];
+			    my $report = $sensor->get_average();
+			    if (defined $report)
+			    {
+				logmsg "Averaged value: $report->{VALUE}";
+				$repq->push($report);
+			    }
+                            $sensor->clear_samples();			    
                         }
                     }
                     else
                     {
-                        log_append($report);
+			logmsg "Saving report";
+                        $repq->push($report);
                     }
                 };
 		if ($@)
@@ -212,6 +203,7 @@ while (1)
 	    # logmsg "Sensor $sensor->{name} not enabled";
         }
     }
+    $repq->flush();
 	led_off() if $led == 1;
-    sleep 5;
+    sleep 2;
 }
