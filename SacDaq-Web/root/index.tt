@@ -1,16 +1,9 @@
-<html>
-  <head>
-    <title>SacDaq Dashboard</title>
-  </head>
-  
-  <body>
-    <h1>SacDaq Dashboard</h1>
-
+[% SET page_title = "Dashboard" %]
+[% INCLUDE common/header.tt %]
     <dl>
       [% FOREACH sensor IN sensors -%]
       <dt><a href="/sensor/[% sensor.uuid %]/data">[% sensor.name %]</a></dt>
-      <dd>[% sensor.last_value %] at [% sensor.last_datetime %]</dd>
+      <dd>[% sensor.last_value %] at [% local_time(sensor.last_datetime) %]</dd>
       [% END -%]
     </dl>
-  </body>
-</html>
+[% INCLUDE common/footer.tt %]

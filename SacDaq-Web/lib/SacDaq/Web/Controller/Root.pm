@@ -48,7 +48,15 @@ sub index :Path :Args(0) {
                                                     {order_by => {-desc=>'time'},
                                                      rows => 1});
             $data->{last_datetime} = $lastrep->time;
-            $data->{last_value} = $sd->format_value($lastrep);
+	    my $dv = $lastrep->dimvalue;
+	    my $dvf = $dv->format();
+	    if ($c->config->{default_units}->{$lastrep->dimension})
+	    {
+		eval {
+		    $dvf = $dv->convert_format($c->config->{default_units}->{$lastrep->dimension});
+		};
+	    }
+            $data->{last_value} = $dvf;
         }
         push @sensordata, $data;
     }
@@ -77,6 +85,17 @@ Attempt to render a view, if needed.
 =cut
 
 sub end : ActionClass('RenderView') {}
+
+sub begin :Private {
+    my ($self, $c) = @_;
+
+    my $tz = DateTime::TimeZone->new(name => $c->config->{timezone});
+    $c->stash->{tz} = $tz;
+    $c->stash->{local_time} = sub {my $dt = $_[0]->clone;
+				   $dt->set_time_zone('UTC');
+				   $dt->set_time_zone($tz);
+				   $dt->strftime("%F %H:%M")};
+}
 
 =head1 AUTHOR
 

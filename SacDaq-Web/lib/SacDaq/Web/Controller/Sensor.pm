@@ -66,6 +66,15 @@ sub data :Chained('sensor') :Args(0) {
     my $s = $c->stash->{sensordef};
 
     my @reports = $s->search_related('reports', {}, {order_by => {-desc => 'time'}, rows => 50});
+    my $dim = $reports[0]->dimension;
+    if ($c->config->{default_units}->{$dim})
+    {
+	$c->stash->{display_unit} = $c->config->{default_units}->{$dim};
+    }
+    else
+    {
+	$c->stash->{display_unit} = $reports[0]->unit;
+    }
     $c->stash->{reports} = \@reports;
 }
 

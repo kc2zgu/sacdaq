@@ -125,4 +125,15 @@ __PACKAGE__->belongs_to(
 
 __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 __PACKAGE__->add_column('+time' => {data_type => 'datetime'});
+
+use DimValue;
+
+sub dimvalue {
+    my $self = shift;
+
+    return DimValue->new(DIMENSION => $self->dimension,
+			 VALUE => $self->value,
+			 UNIT => $self->unit);
+}
+
 1;

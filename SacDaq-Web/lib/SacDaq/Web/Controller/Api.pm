@@ -25,7 +25,7 @@ Catalyst Controller.
 =cut
 
 my $defaultver = 1;
-my $maxsync = 500;
+my $maxsync = 250;
 
 sub index :Path :Args(0) {
     my ( $self, $c ) = @_;
