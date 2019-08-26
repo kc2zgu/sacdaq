@@ -1,21 +1,25 @@
-<html>
-  <head>
-    <title>Sensor Data Summary</title>
-  </head>
-  
-  <body>
-    <h1>Sensor Data for [% sensordef.name %]</h1>
+[% SET page_title = "Summary for $sensordef.name" -%]
+[% INCLUDE common/header.tt -%]
+
+    <p>
+    <strong>Sensor Instance UUID:</strong> <span class="numeric">[% sensordef.uuid %]</span><br />
+    <strong>Data Type:</strong> [% reports.0.dimension %]<br />
+    <strong>Device Driver:</strong> [% reports.0.driver %]<br />
+    </p>
+
+[% SET current_tab = "summary" %]
+[% INCLUDE "common/sensor-tabs.tt" %]
 
     <table>
       <tr>
-        <th>Time</th><th>Average</th><th>Min/Max</th>
+        <th class="time-cell">Time</th><th>Average</th><th>Min/Max</th>
       </tr>
 [% FOREACH interval IN intervals -%]
       <tr>
-        <td>[% interval.0 %]</td><td>[% interval.3 %]</td><td>[% interval.4 %] - [% interval.5 %]</td>
+        <td><span class="numeric">[% local_time(interval.0) %]</span></td>
+	<td>[% interval.3 %]</td><td>[% interval.4 %] - [% interval.5 %]</td>
       </tr>
 [% END -%]
     </table>
 
-  </body>
-</html>
+[% INCLUDE common/footer.tt -%]

@@ -1,6 +1,15 @@
 [% SET page_title = "Sensor Data for $sensordef.name" %]
 [% INCLUDE common/header.tt %]
 
+    <p>
+    <strong>Sensor Instance UUID:</strong> <span class="numeric">[% sensordef.uuid %]</span><br />
+    <strong>Data Type:</strong> [% reports.0.dimension %]<br />
+    <strong>Device Driver:</strong> [% reports.0.driver %]<br />
+    </p>
+
+[% SET current_tab = "data" %]
+[% INCLUDE "common/sensor-tabs.tt" %]
+
     <table>
       <tr>
         <th class="time-cell">Time</th><th>Value</th>
@@ -13,4 +22,4 @@
 [% END -%]
     </table>
     
-[% INCLUDE common/footer.tt %]
+[% INCLUDE common/footer.tt -%]

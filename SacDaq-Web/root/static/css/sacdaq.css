@@ -1,14 +1,3 @@
-table.files { font-family: monospace; font-size: 130%; }
-table.files td { padding-right: 32px; padding-left: 12px; margin: 0; }
-table.files th { text-align: left; padding-right: 24px; padding-left: 18px; }
-table.files tr.header { border-bottom: 1px solid black; }
-td.size { text-align: right; }
-a { text-decoration: none; color: #00f; }
-a:visited { color: #66c; }
-a:hover { color: #0a0; }
-a:active { color: #a00; }
-table.files tr:hover { background-color: #cfd; }
-
 body
 { 
   margin: 0;
@@ -27,7 +16,8 @@ a:hover
 { 
   color: #0a0; text-decoration: underline;
 }
-a img { 
+a img
+{
   border-width: 2px;
 }
 #header
@@ -61,7 +51,8 @@ a img {
   border-width: 2px;
   border-style: solid none solid solid;
   margin-left: 10pt;
-  padding: 8pt 12pt 8pt 2pt;
+  padding: 8pt 12pt 8pt 6pt;
+  font-family: sans-serif;
 }
 #content h2
 {
@@ -76,4 +67,33 @@ a img {
 .time-cell
 {
     width: 12em;
+}
+#tab-container
+{
+    width: 100%;
+    border-bottom: 2px solid #f50;
+    padding-left: 16pt;
+    margin-left: -6pt;
+    margin-top: 8pt;
+}
+.tab-inactive
+{
+    background-color: #dde;
+    border-color: #d40;
+    border-style: solid;
+    border-width: 2px 2px 0;
+    padding: 0 4pt 0;
+}
+.tab-active
+{
+    border-color: #f50 #f50 #eee;
+    border-width: 3px 3px 2px;
+    border-style: solid;
+    padding: 4pt 6pt 0;
+    font-weight: bold;
+}
+#footer
+{
+    color: #335;
+    margin-left: 16pt;
 }

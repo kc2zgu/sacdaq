@@ -1,0 +1,12 @@
+    <div id="tab-container">
+[% IF current_tab == "data" -%]
+      <span class="tab-active">Recent Data</span>
+[% ELSE -%]
+      <span class="tab-inactive"><a href="[% c.uri_for("/sensor/$sensordef.uuid/data") %]">Recent Data</a></span>
+[% END -%]
+[% IF current_tab == "summary" -%]
+      <span class="tab-active">Summary</span>
+[% ELSE -%]
+      <span class="tab-inactive"><a href="[% c.uri_for("/sensor/$sensordef.uuid/summary") %]">Summary</a></span>
+[% END -%]
+    </div>
