@@ -72,10 +72,17 @@ sub convert {
     }
 
     my $nu = $dims{$dim}->[1];
-    my $nv = ($self->{UNIT} eq $nu) ? $self->{VALUE} : $units{$self->{UNIT}}->[3]->($self->{VALUE});
+    if ($self->{UNIT} eq $nu)
+    {
+	return $self->{VALUE};
+    }
+    else
+    {
+	my $nv = ($self->{UNIT} eq $nu) ? $self->{VALUE} : $units{$self->{UNIT}}->[3]->($self->{VALUE});
     
-    my $cv = $units{$unit}->[2]->($nv);
-    return $cv;
+	my $cv = $units{$unit}->[2]->($nv);
+	return $cv;
+    }
 }
 
 sub convert_format {
