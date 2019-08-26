@@ -95,6 +95,10 @@ sub begin :Private {
 				   $dt->set_time_zone('UTC');
 				   $dt->set_time_zone($tz);
 				   $dt->strftime("%F %H:%M")};
+    $c->stash->{local_time_iso} = sub {my $dt = $_[0]->clone;
+				       $dt->set_time_zone('UTC');
+				       $dt->set_time_zone($tz);
+				       $dt->strftime("%FT%H:%M:%S")};    
 }
 
 =head1 AUTHOR

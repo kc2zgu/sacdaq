@@ -161,7 +161,7 @@ sub plot {
       'set timefmt "%Y-%m-%dT%H:%M:%S" # time format';
 
     push @plotscript,
-      qq(set term $term size 1200,800),
+      qq(set term $term size $self->{size}->[0],$self->{size}->[1]),
       qq(set output "$tempdir/$outfile");
 
     push @plotscript,

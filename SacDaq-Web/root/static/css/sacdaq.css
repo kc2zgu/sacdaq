@@ -97,3 +97,10 @@ a img
     color: #335;
     margin-left: 16pt;
 }
+.plot-image
+{
+    float: right;
+    clear: right;
+    border: 1px solid black;
+    margin: 8pt;
+}

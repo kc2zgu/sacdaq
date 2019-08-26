@@ -10,6 +10,10 @@
 [% SET current_tab = "data" %]
 [% INCLUDE "common/sensor-tabs.tt" %]
 
+[% SET first_time = local_time_iso(reports.0.time) -%]
+[% SET last_time = local_time_iso(reports.-1.time) -%]
+    <img class="plot-image" src="[% c.uri_for("/plot/image", {sensor => sensordef.uuid, start => last_time, end => first_time, size => "800x400"}) %]" />
+
     <table>
       <tr>
         <th class="time-cell">Time</th><th>Value</th>
@@ -21,5 +25,6 @@
       </tr>
 [% END -%]
     </table>
-    
+    <br style="clear:both" />
+
 [% INCLUDE common/footer.tt -%]
