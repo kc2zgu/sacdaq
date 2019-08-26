@@ -106,34 +106,40 @@ sub summary :Chained('sensor') :Args(0) {
 				       {order_by => {-desc=>'time'},
 					rows => 1});
     my $last_time = $lastrep->time;
-    $c->log->debug("Most recent: $last_time");
     my $trunc_time = $last_time->truncate(to => $trunc);
-    $c->log->debug("Most recent period: $trunc_time");
     for (1..$count)
     {
 	my $range_start = $trunc_time - $span;
 	my $range_end = $trunc_time + $span;
-	$c->log->debug("Next range: $range_start - $range_end ($trunc_time)");
 	push @intervals, [$trunc_time->clone, $range_start, $range_end];
 	$trunc_time -= $interval;
     }
 
     for my $interval(@intervals)
     {
-	$c->log->debug("Looking up $interval->[0]");
 	my @reports = $s->search_related('reports', {time => {-between => [$interval->[1], $interval->[2]]}},
 					 {order_by => {-desc => 'time'}});
 	
+	my $dim = $reports[0]->dimension;
+	if ($c->config->{default_units}->{$dim})
+	{
+	    $c->stash->{display_unit} = $c->config->{default_units}->{$dim};
+	}
+	else
+	{
+	    $c->stash->{display_unit} = $reports[0]->unit;
+	}
 	my $stat = Statistics::Descriptive::Full->new();
 	for my $rep (@reports)
 	{
 	    my $t = $rep->time;
 	    $stat->add_data($rep->value);
 	}
-	push @$interval, $stat->mean, $stat->min, $stat->max;
-	$c->log->debug("Average: $interval->[3]");
-	$c->log->debug("Min: $interval->[4]");
-	$c->log->debug("Max: $interval->[5]");
+	push @$interval,
+	    map {DimValue->new(DIMENSION => $dim, UNIT => $reports[0]->unit, VALUE => $_)} (
+		$stat->mean,
+		$stat->min,
+		$stat->max);
     }
     $c->stash->{intervals} = \@intervals;
 }

@@ -17,7 +17,8 @@
 [% FOREACH interval IN intervals -%]
       <tr>
         <td><span class="numeric">[% local_time(interval.0) %]</span></td>
-	<td>[% interval.3 %]</td><td>[% interval.4 %] - [% interval.5 %]</td>
+	<td><span class="numeric">[% interval.3.convert_format(display_unit) %]</span></td>
+	<td><span class="numeric">[% interval.4.convert_format(display_unit) %] - [% interval.5.convert_format(display_unit) %]</span></td>
       </tr>
 [% END -%]
     </table>
