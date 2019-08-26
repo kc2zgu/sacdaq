@@ -65,6 +65,11 @@ sub convert {
 	die "Unit $unit not defined";
     }
 
+    if ($self->{UNIT} eq $unit)
+    {
+	return $self->{VALUE};
+    }
+
     my $dim = $self->{DIMENSION};
     unless ($units{$unit}->[0] eq $dim)
     {

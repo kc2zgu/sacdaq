@@ -35,8 +35,15 @@ if ($i2c->checkDevice($chip))
 
     my $tempint = ($tempswap & 0x1fff);
     $tempint = -($top - $tempint) if ($tempint & 0x1000);
+    if (($tempint / $fraction) > 150)
+    {
+        $sensor->set_fault('range');
+    }
+    else
+    {
     $sensor->set_value($tempint / $fraction);
     $sensor->set_extension(PRECISION => 1/$fraction);
+    }
 }
 else
 {
