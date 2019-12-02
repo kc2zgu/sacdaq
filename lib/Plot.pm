@@ -19,6 +19,7 @@ sub new {
                 end => undef,
                 series => [],
                 xscale_label => 'auto',
+                xtics => undef,
                 timezone => 'UTC',
                 dimension => undef,
                 unit => undef,
@@ -35,6 +36,13 @@ sub new {
 
     $self->{tempdir} = File::Temp->newdir(TEMPLATE => "$self->{temproot}/sacdaq-plot-XXXX",
                                           CLEANUP => 1);
+
+    if (defined $self->{start} && defined $self->{end})
+    {
+        my $timespan = $self->{end}->delta_ms($self->{start});
+        my $timespan_min = $timespan->in_units('minutes');
+        $self->{timespan_min} = $timespan_min;
+    }
 
     bless $self, $class;
 }
@@ -142,8 +150,12 @@ sub _get_time_range {
         }
     }
 
+    my $timespan = $end_dt->delta_ms($start_dt);
+    my $timespan_min = $timespan->in_units('minutes');
+
     $self->{start} = $start_dt->clone;
     $self->{end} = $end_dt->clone;
+    $self->{timespan_min} = $timespan_min;
 }
 
 sub plot {
@@ -156,18 +168,58 @@ sub plot {
     my @plotscript;
 
     push @plotscript,
-      'set datafile separator comma # use CSV input',
-      'set xdata time # X axis is time',
-      'set timefmt "%Y-%m-%dT%H:%M:%S" # time format';
+        'set datafile separator comma # use CSV input',
+        'set xdata time # X axis is time',
+        'set timefmt "%Y-%m-%dT%H:%M:%S" # time format';
 
     push @plotscript,
-      qq(set term $term size $self->{size}->[0],$self->{size}->[1]),
-      qq(set output "$tempdir/$outfile");
+        qq(set term $term size $self->{size}->[0],$self->{size}->[1]),
+        qq(set output "$tempdir/$outfile");
 
     push @plotscript,
-      'set grid xtics ytics mxtics mytics lt 1 lc "#b0b0b0" lw .7 dt solid, lc "#606060"',
-      'set ytics 5',
-      'set mytics 5';
+        'set grid xtics ytics mxtics mytics lt 1 lc "#b0b0b0" lw .7 dt solid, lc "#606060"',
+        'set ytics 5',
+        'set mytics 5';
+
+    if ($self->{xscale_label} eq 'auto')
+    {
+        # pick x axis grid based on time interval
+        if ($self->{timespan_min} >= 3600)
+        {
+            $self->{xscale_label} = '%m-%d';
+            $self->{xtics} = [86400, 4];
+        }
+        elsif ($self->{timespan_min} >= 720)
+        {
+            $self->{xscale_label} = '%m-%d %H';
+            $self->{xtics} = [14400, 4];
+        }
+        elsif ($self->{timespan_min} >= 360)
+        {
+            $self->{xscale_label} = '%H:%M';
+            $self->{xtics} = [3600, 2];
+        }
+        elsif ($self->{timespan_min} >= 180)
+        {
+            $self->{xscale_label} = '%H:%M';
+            $self->{xtics} = [3600, 4];
+        }
+        elsif ($self->{timespan_min} >= 75)
+        {
+            $self->{xscale_label} = '%H:%M';
+            $self->{xtics} = [1800, 2];
+        }
+        else
+        {
+            $self->{xscale_label} = '%H:%M';
+            $self->{xtics} = [900, 15];
+        }
+    }
+
+    push @plotscript,
+        qq(set xtics format "$self->{xscale_label}"),
+        qq(set xtics $self->{xtics}->[0]),
+        qq(set mxtics $self->{xtics}->[1]);
 
     my @plots;
 
@@ -196,6 +248,7 @@ sub plot {
     }
     else
     {
+        #print STDERR "failed plot commands: ", join("\n", @plotscript);
         return undef;
     }
 }
