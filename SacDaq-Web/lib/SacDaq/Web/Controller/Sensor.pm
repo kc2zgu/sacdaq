@@ -82,19 +82,28 @@ sub summary :Chained('sensor') :Args(0) {
     my ($self, $c) = @_;
 
     my $s = $c->stash->{sensordef};
-    my $period = $c->req->param('period') // 'day';
+    my $period = $c->req->param('period') // '1d';
 
     my @intervals;
     my ($trunc, $count, $interval, $span);
 
-    if ($period eq 'day')
+    $c->stash->{period} = $period;
+
+    if ($period eq '6h')
+    {
+	$trunc = 'hour';
+	$count = 12;
+	$interval = DateTime::Duration->new(minutes => 30);
+	$span = DateTime::Duration->new(minutes => 15);
+    }
+    elsif ($period eq '1d')
     {
 	$trunc = 'hour';
 	$count = 24;
 	$interval = DateTime::Duration->new(hours => 1);
 	$span = DateTime::Duration->new(minutes => 30);
     }
-    if ($period eq 'week')
+    elsif ($period eq '7d')
     {
 	$trunc = 'day';
 	$count = 7;

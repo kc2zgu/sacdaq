@@ -7,7 +7,7 @@
     <strong>Device Driver:</strong> [% reports.0.driver %]<br />
     </p>
 
-[% SET current_tab = "summary" %]
+[% SET current_tab = "summary_$period" %]
 [% INCLUDE "common/sensor-tabs.tt" %]
 
 [% SET first_time = local_time_iso(intervals.0.0) -%]

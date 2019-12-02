@@ -92,6 +92,13 @@ a img
     padding: 4pt 6pt 0;
     font-weight: bold;
 }
+.tab-passive
+{
+    border-color: #f50;
+    border-width: 0 0 2px;
+    border-style: solid;
+    padding: 0 4pt 0;
+}
 #footer
 {
     color: #335;

@@ -4,9 +4,15 @@
 [% ELSE -%]
       <span class="tab-inactive"><a href="[% c.uri_for("/sensor/$sensordef.uuid/data") %]">Recent Data</a></span>
 [% END -%]
-[% IF current_tab == "summary" -%]
-      <span class="tab-active">Summary</span>
+      <span class="tab-passive">Summary: </span>
+[% IF current_tab == "summary_6h" -%]
+      <span class="tab-active">Past 6 Hours</span>
 [% ELSE -%]
-      <span class="tab-inactive"><a href="[% c.uri_for("/sensor/$sensordef.uuid/summary") %]">Summary</a></span>
+      <span class="tab-inactive"><a href="[% c.uri_for("/sensor/$sensordef.uuid/summary", {period=> "6h"}) %]">Past 6 Hours</a></span>
+[% END -%]
+[% IF current_tab == "summary_1d" -%]
+      <span class="tab-active">Past Day</span>
+[% ELSE -%]
+      <span class="tab-inactive"><a href="[% c.uri_for("/sensor/$sensordef.uuid/summary", {period=> "1d"}) %]">Past Day</a></span>
 [% END -%]
     </div>
