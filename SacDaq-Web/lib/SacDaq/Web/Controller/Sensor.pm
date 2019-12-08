@@ -128,27 +128,33 @@ sub summary :Chained('sensor') :Args(0) {
     {
 	my @reports = $s->search_related('reports', {time => {-between => [$interval->[1], $interval->[2]]}},
 					 {order_by => {-desc => 'time'}});
-	
-	my $dim = $reports[0]->dimension;
-	if ($c->config->{default_units}->{$dim})
-	{
-	    $c->stash->{display_unit} = $c->config->{default_units}->{$dim};
-	}
-	else
-	{
-	    $c->stash->{display_unit} = $reports[0]->unit;
-	}
-	my $stat = Statistics::Descriptive::Full->new();
-	for my $rep (@reports)
-	{
-	    my $t = $rep->time;
-	    $stat->add_data($rep->value);
-	}
-	push @$interval,
-	    map {DimValue->new(DIMENSION => $dim, UNIT => $reports[0]->unit, VALUE => $_)} (
-		$stat->mean,
-		$stat->min,
-		$stat->max);
+	if (@reports > 0)
+        {
+            my $dim = $reports[0]->dimension;
+            if ($c->config->{default_units}->{$dim})
+            {
+                $c->stash->{display_unit} = $c->config->{default_units}->{$dim};
+            }
+            else
+            {
+                $c->stash->{display_unit} = $reports[0]->unit;
+            }
+            my $stat = Statistics::Descriptive::Full->new();
+            for my $rep (@reports)
+            {
+                my $t = $rep->time;
+                $stat->add_data($rep->value);
+            }
+            push @$interval,
+                map {DimValue->new(DIMENSION => $dim, UNIT => $reports[0]->unit, VALUE => $_)} (
+                    $stat->mean,
+                    $stat->min,
+                    $stat->max);
+        }
+        else
+        {
+            # no data
+        }
     }
     $c->stash->{intervals} = \@intervals;
 }
