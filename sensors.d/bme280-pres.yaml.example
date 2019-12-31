@@ -1,0 +1,8 @@
+name: pres-BME280-example
+driver: bme280-pres
+enabled: 1
+args:
+ - bus=1
+ - chipaddr=0x77
+poll: 15
+average: 4
