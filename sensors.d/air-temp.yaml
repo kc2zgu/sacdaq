@@ -1,8 +1,0 @@
-name: air-temp
-driver: lm75
-enabled: 1
-args:
- - bus=1
- - chipaddr=0x37
- - bits=11
-poll: 15

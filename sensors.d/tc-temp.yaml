@@ -1,7 +1,0 @@
-name: thermocouple
-driver: max6675
-enabled: 1
-args:
- - bus=0
- - cs=0
-poll: 15
