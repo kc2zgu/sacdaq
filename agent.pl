@@ -191,7 +191,10 @@ while (1)
 
                     if ($config->{mqtt}->{enabled})
                     {
-                        MQTTPub::publish($sensor->{name}, $report->{VALUE});
+			if ($report->{VALID})
+			{
+			    MQTTPub::publish($sensor->{name}, $report->{VALUE});
+			}
                     }
 
                     if ($sensor->{average})
@@ -205,7 +208,7 @@ while (1)
 				logmsg "Averaged value: $report->{VALUE}";
 				$repq->push($report);
 			    }
-                            $sensor->clear_samples();			    
+                            $sensor->clear_samples();
                         }
                     }
                     else
