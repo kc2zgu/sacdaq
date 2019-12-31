@@ -221,6 +221,12 @@ sub plot {
         qq(set xtics $self->{xtics}->[0]),
         qq(set mxtics $self->{xtics}->[1]);
 
+    my $ylabel = DimValue::name($self->{dimension}) . ' (' . DimValue::symbol($self->{unit}) . ')';
+
+    push @plotscript,
+        qq(set xlabel "Time"),
+        qq(set ylabel "$ylabel");
+
     my @plots;
 
     for my $series(0..$#{$self->{series}})

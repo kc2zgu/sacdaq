@@ -106,4 +106,29 @@ sub convert_format {
     return _format_value($self->convert($unit), $unit, 2);
 }
 
+sub name {
+    my $self = shift;
+
+    if (ref $self)
+    {
+        return $dims{$self->{DIMENSNION}}->[0];
+    }
+    else
+    {
+        return $dims{$self}->[0];
+    }
+}
+
+sub symbol {
+    my $self = shift;
+
+    if (ref $self)
+    {
+        return $units{$self->{UNIT}}->[1];
+    }
+    else
+    {
+        return $units{$self}->[1];
+    }
+}
 1;
