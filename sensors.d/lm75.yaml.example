@@ -1,8 +1,9 @@
-name: air-temp
+name: temp-LM75-example
 driver: lm75
 enabled: 1
 args:
  - bus=1
  - chipaddr=0x37
- - bits=11
+ - bits=9
 poll: 15
+average: 4

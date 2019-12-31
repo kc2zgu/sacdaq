@@ -13,6 +13,7 @@ use SensDB;
 use TimeSync;
 use RepQueue;
 use HTTP::Tiny;
+use YAML qw/LoadFile/;
 
 my $logfd;
 
@@ -29,6 +30,8 @@ sub logmsg {
         print STDERR "[AGENT] $msg\n";
     }
 }
+
+my $config = LoadFile("sacdaq.conf");
 
 my $blinkserv = "http://localhost:8182";
 my $ledpin = 'led1';
@@ -135,9 +138,23 @@ log_start();
 
 led_open();
 
-TimeSync::timesync_wait();
+if ($config->{timesync}->{enabled})
+{
+    TimeSync::timesync_wait();
+    logmsg "Time synchronized";
+}
+else
+{
+    logmsg "Time sync not enabled";
+}
 
-logmsg "Time synchronized";
+if ($config->{mqtt}->{enabled})
+{
+    logmsg "MQTT broker: $config->{mqtt}->{broker}";
+    require MQTTPub;
+
+    MQTTPub::open($config->{mqtt}->{broker});
+}
 
 my $repq = RepQueue->new;
 $repq->{db} = $db;
@@ -172,6 +189,14 @@ while (1)
 
                     logmsg join '; ', map {"$_=$report->{$_}"} sort keys %$report;
 
+                    if ($config->{mqtt}->{enabled})
+                    {
+			if ($report->{VALID})
+			{
+			    MQTTPub::publish($sensor->{name}, $report->{VALUE});
+			}
+                    }
+
                     if ($sensor->{average})
                     {
                         $sensor->push_sample($report);
@@ -183,7 +208,7 @@ while (1)
 				logmsg "Averaged value: $report->{VALUE}";
 				$repq->push($report);
 			    }
-                            $sensor->clear_samples();			    
+                            $sensor->clear_samples();
                         }
                     }
                     else

@@ -1,0 +1,8 @@
+name: temp-MCP980x-example
+driver: mcp980x
+enabled: 1
+args:
+ - bus=1
+ - chipaddr=0x1f
+poll: 15
+average: 4
