@@ -15,7 +15,7 @@ sub open {
 sub publish {
     my ($sensor, $value) = @_;
 
-    $mqtt_client->retain("/sacdaq/sensor/$sensor", $value);
+    $mqtt_client->retain("sacdaq/sensor/$sensor", $value);
 }
 
 1;
