@@ -111,10 +111,17 @@ sub summary :Chained('sensor') :Args(0) {
 	$span = DateTime::Duration->new(hours => 12);
     }
 
-    my ($lastrep) = $s->search_related('reports', {},
-				       {order_by => {-desc=>'time'},
-					rows => 1});
-    my $last_time = $lastrep->time;
+    my $last_time;
+    if ($c->req->param('end'))
+    {
+        $last_time = DateTime::Format::ISO8601->parse_datetime($c->req->param('end'));
+    } else
+    {
+        my ($lastrep) = $s->search_related('reports', {},
+                                           {order_by => {-desc=>'time'},
+                                            rows => 1});
+        $last_time = $lastrep->time;
+    }
     my $trunc_time = $last_time->truncate(to => $trunc);
     for (1..$count)
     {
