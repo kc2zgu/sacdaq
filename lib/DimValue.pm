@@ -6,6 +6,7 @@ use strict;
 my %dims = (
     TEMP => ['Temperature', 'Kelvin'],
     RH => ['Relative Humidity', 'Percent'],
+    PRES => ['Pressure', 'Pascal'],
     VOLT => ['Voltage', 'Volt'],
     CURR => ['Current', 'Amp'],
     );
@@ -17,6 +18,15 @@ my %units = (
     Fahrenheit => ['TEMP', 'F', sub { $_[0] * 1.8 - 459.67 }, sub { ($_[0] + 459.67) / 1.8 }],
     Rankine => ['TEMP', 'R', sub { $_[0] * 1.8 }, sub { $_[0] / 1.8 }],
     Percent => ['RH', '%'],
+    Pascal => ['PRES', 'Pa'],
+    Hectopascal => ['PRES', 'hPa', sub { $_[0] / 100 }, sub { $_[0] * 100 }],
+    Kilopascal => ['PRES', 'kPa', sub { $_[0] / 1000 }, sub { $_[0] * 1000 }],
+    Bar => ['PRES', 'bar', sub { $_[0] / 100000 }, sub { $_[0] * 1000000 }],
+    Millibar => ['PRES', 'mb', sub { $_[0] / 100 }, sub { $_[0] * 100 }],
+    Atmosphere => ['PRES', 'atm', sub { $_[0] / 101325 }, sub { $_[0] * 101325 }],
+    PoundSquareInch => ['PRES', 'psi', sub { $_[0] / 6894.757 }, sub { $_[0] * 6894.757 }],
+    InchMercury => ['PRES', 'inHg', sub { $_[0] / 3386.389 }, sub { $_[0] * 3386.389 }],
+    Torr => ['PRES', 'Torr', sub { $_[0] / 133.3224 }, sub { $_[0] * 133.3224 }],
     Volt => ['VOLT', 'V'],
     Amp => ['CURR', 'A'],
     );
@@ -62,31 +72,31 @@ sub convert {
 
     unless (exists $units{$unit})
     {
-	die "Unit $unit not defined";
+        die "Unit $unit not defined";
     }
 
     if ($self->{UNIT} eq $unit)
     {
-	return $self->{VALUE};
+        return $self->{VALUE};
     }
 
     my $dim = $self->{DIMENSION};
     unless ($units{$unit}->[0] eq $dim)
     {
-	die "Can't convert $dims{$dim}->[0] to $dims{$units{$unit}->[0]}->[0] unit $unit";
+        die "Can't convert $dims{$dim}->[0] to $dims{$units{$unit}->[0]}->[0] unit $unit";
     }
 
     my $nu = $dims{$dim}->[1];
-    if ($self->{UNIT} eq $nu)
+    #if ($self->{UNIT} eq $nu)
+    #{
+    #    return $self->{VALUE};
+    #}
+    #else
     {
-	return $self->{VALUE};
-    }
-    else
-    {
-	my $nv = ($self->{UNIT} eq $nu) ? $self->{VALUE} : $units{$self->{UNIT}}->[3]->($self->{VALUE});
+        my $nv = ($self->{UNIT} eq $nu) ? $self->{VALUE} : $units{$self->{UNIT}}->[3]->($self->{VALUE});
     
-	my $cv = $units{$unit}->[2]->($nv);
-	return $cv;
+        my $cv = ($unit eq $nu) ? $nv : $units{$unit}->[2]->($nv);
+        return $cv;
     }
 }
 
