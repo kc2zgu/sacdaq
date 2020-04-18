@@ -1,0 +1,16 @@
+[Unit]
+Description=SACDaq Agent
+
+[Service]
+Type=simple
+ExecStart=/opt/sacdaq/agent.pl
+WorkingDirectory=/opt/sacdaq
+User=sacdaq
+Group=sacdaq
+# only on systemd >=236
+StandardOutput="file:/opt/sacdaq/logs/agent.log"
+StandardError="file:/opt/sacdaq/logs/agent.err"
+
+[Install]
+WantedBy=multi-user.target
+
