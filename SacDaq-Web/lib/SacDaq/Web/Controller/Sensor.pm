@@ -78,6 +78,14 @@ sub data :Chained('sensor') :Args(0) {
     $c->stash->{reports} = \@reports;
 }
 
+my %summary_interval_defs =
+  (
+   # key => [count, interval_s, span]
+   '6h' => [12, 1800, [-900, 900]],
+   '1d' => [24, 3600, [-1800, 1800]],
+   '7d' => [7, 86400, [0, 86400]],
+  );
+
 sub summary :Chained('sensor') :Args(0) {
     my ($self, $c) = @_;
 
@@ -85,31 +93,8 @@ sub summary :Chained('sensor') :Args(0) {
     my $period = $c->req->param('period') // '1d';
 
     my @intervals;
-    my ($trunc, $count, $interval, $span);
 
     $c->stash->{period} = $period;
-
-    if ($period eq '6h')
-    {
-	$trunc = 'hour';
-	$count = 12;
-	$interval = DateTime::Duration->new(minutes => 30);
-	$span = DateTime::Duration->new(minutes => 15);
-    }
-    elsif ($period eq '1d')
-    {
-	$trunc = 'hour';
-	$count = 24;
-	$interval = DateTime::Duration->new(hours => 1);
-	$span = DateTime::Duration->new(minutes => 30);
-    }
-    elsif ($period eq '7d')
-    {
-	$trunc = 'day';
-	$count = 7;
-	$interval = DateTime::Duration->new(days => 1);
-	$span = DateTime::Duration->new(hours => 12);
-    }
 
     my $last_time;
     if ($c->req->param('end'))
@@ -122,13 +107,22 @@ sub summary :Chained('sensor') :Args(0) {
                                             rows => 1});
         $last_time = $lastrep->time;
     }
-    my $trunc_time = $last_time->truncate(to => $trunc);
-    for (1..$count)
+    my $interval_def = $summary_interval_defs{$period};
+
+    my $day = $last_time->clone->truncate(to => 'day');
+    my $s_of_day = $last_time->hour * 3600 + $last_time->minute * 60 + $last_time->second;
+    #$c->log->debug("current day $last_time: $day + $s_of_day s");
+    my $interval_n = int($s_of_day / $interval_def->[1]) + 1;
+    my $interval_step = DateTime::Duration->new(seconds => $interval_def->[1]);
+    my $nspan = DateTime::Duration->new(seconds => $interval_def->[2]->[0]);
+    my $pspan = DateTime::Duration->new(seconds => $interval_def->[2]->[1]);
+    my $int_label = $day + ($interval_step * $interval_n);
+
+    for (1..$interval_def->[0])
     {
-	my $range_start = $trunc_time - $span;
-	my $range_end = $trunc_time + $span;
-	push @intervals, [$trunc_time->clone, $range_start, $range_end];
-	$trunc_time -= $interval;
+        #$c->log->debug($int_label);
+        push @intervals, [$int_label->clone, $int_label + $nspan, $int_label + $pspan];
+        $int_label -= $interval_step;
     }
 
     for my $interval(@intervals)

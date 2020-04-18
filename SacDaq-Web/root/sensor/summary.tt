@@ -10,8 +10,8 @@
 [% SET current_tab = "summary_$period" %]
 [% INCLUDE "common/sensor-tabs.tt" %]
 
-[% SET first_time = local_time_iso(intervals.0.0) -%]
-[% SET last_time = local_time_iso(intervals.-1.0) -%]
+[% SET first_time = local_time_iso(intervals.0.2) -%]
+[% SET last_time = local_time_iso(intervals.-1.1) -%]
     <img class="plot-image" src="[% c.uri_for("/plot/image", {sensor => sensordef.uuid, start => last_time, end => first_time, size => "800x400"}) %]" />
 
     <table>
