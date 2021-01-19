@@ -105,7 +105,8 @@ sub push_sample {
     my ($self, $report) = @_;
 
     push @{$self->{samples}}, $report;
-    logmsg "Pushed sample $report->{VALUE}";
+    my $n = $self->sample_count;
+    logmsg "Pushed sample $report->{VALUE} (n=$n)";
 }
 
 sub sample_count {
