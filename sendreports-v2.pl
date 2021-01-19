@@ -4,6 +4,8 @@ use strict;
 
 use DateTime;
 use DateTime::Format::ISO8601;
+use YAML qw/LoadFile/;
+use Path::Tiny;
 
 use FindBin;
 use lib "$FindBin::Bin/lib";
@@ -11,13 +13,17 @@ use lib "$FindBin::Bin/lib";
 use SensDB;
 use ApiClient;
 
-my $dbfile = "logs/sensordata.sqlite";
+my $root = path($FindBin::Bin);
+my $confname = 'sacdaq.conf';
+my $config = LoadFile($root->child($confname));
+
+my $dbfile = $config->{database}->{path};
 my $db = SensDB->connect("dbi:SQLite:$dbfile");
 
-my $apihost = "http://moclus-sacdaq.local:3000/api/";
+my $apihost = $config->{sync}->{apihost};
 if (exists $ENV{DAQ_API})
 {
-$apihost = $ENV{DAQ_API};
+    $apihost = $ENV{DAQ_API};
 }
 
 my $api = ApiClient->new($apihost);
