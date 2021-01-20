@@ -95,6 +95,16 @@ else
 my $repq = RepQueue->new;
 $repq->{db} = $db;
 
+# connect MQTT
+
+if ($config->{mqtt}->{enabled})
+{
+    logmsg "MQTT broker: $config->{mqtt}->{broker}";
+    require MQTTPub;
+
+    MQTTPub::open($config->{mqtt}->{broker});
+}
+
 # POE state functions
 
 sub _start {
@@ -190,7 +200,9 @@ sub flush_reports {
 }
 
 sub mqtt_publish {
+    my ($sensor, $report) = @_[ARG0, ARG1];
 
+    MQTTPub::publish($sensor->{name}, $report->{VALUE});
 }
 
 POE::Session->create(package_states =>
