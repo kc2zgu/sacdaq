@@ -15,6 +15,7 @@ use SensInstance;
 use SensDB;
 use TimeSync;
 use RepQueue;
+use DimValue;
 
 # log message function
 
@@ -202,7 +203,20 @@ sub flush_reports {
 sub mqtt_publish {
     my ($sensor, $report) = @_[ARG0, ARG1];
 
-    MQTTPub::publish($sensor->{name}, $report->{VALUE});
+    my $dim = $report->{DIMENSION};
+    if (exists $config->{units}->{$dim})
+    {
+        my $dv = DimValue->new(DIMENSION => $dim, UNIT => $report->{UNIT}, VALUE => $report->{VALUE});
+        for my $unit(@{$config->{units}->{$dim}})
+        {
+            my $sym = DimValue::symbol($unit);
+            MQTTPub::publish('sensor', $sensor->{name}, "value_$sym", sprintf('%.2f', $dv->convert($unit)));
+        }
+    }
+    else
+    {
+        MQTTPub::publish('sensor', $sensor->{name}, 'value', $report->{VALUE});
+    }
 }
 
 POE::Session->create(package_states =>
