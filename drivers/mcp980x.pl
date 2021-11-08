@@ -30,8 +30,8 @@ if ($i2c->checkDevice($chip))
     $sensor->logmsg(sprintf "raw temperature register: 0x%04x 0b%016b", $tempswap, $tempswap);
     my $temp;
 
-    my $top = 2 ** 12;
-    my $fraction = 2 ** (12 - 8);
+    my $top = 2 ** 13;
+    my $fraction = 2 ** (13 - 8);
 
     my $tempint = ($tempswap & 0x1fff);
     $tempint = -($top - $tempint) if ($tempint & 0x1000);
