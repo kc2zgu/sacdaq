@@ -77,8 +77,8 @@ sub report {
     if (-x $drvfile)
     {
         my $repdata;
-        $ENV{PERL5LIB} = $libpath;
-        run ["$drvfile", @{$self->{args}}, defined ($datadir) ? "log=$logfile" : ()], \undef, \$repdata;
+        run ["$drvfile", @{$self->{args}}, defined ($datadir) ? "log=$logfile" : ()], \undef, \$repdata,
+          init => sub { $ENV{PERL5LIB} = "$libpath:$ENV{PERL5LIB}"; };
         $repvalues{RESULT} = 'SUCCESS';
         for my $sensline (split "\n", $repdata)
         {
