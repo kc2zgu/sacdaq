@@ -106,6 +106,8 @@ if ($config->{mqtt}->{enabled})
     MQTTPub::open($config->{mqtt}->{broker});
 }
 
+my %hass_discovered;
+
 # POE state functions
 
 sub _start {
@@ -204,6 +206,7 @@ sub mqtt_publish {
     my ($sensor, $report) = @_[ARG0, ARG1];
 
     my $dim = $report->{DIMENSION};
+    my $hass_topic;
     if (exists $config->{units}->{$dim})
     {
         my $dv = DimValue->new(DIMENSION => $dim, UNIT => $report->{UNIT}, VALUE => $report->{VALUE});
@@ -211,11 +214,19 @@ sub mqtt_publish {
         {
             my $sym = DimValue::symbol($unit);
             MQTTPub::publish('sensor', $sensor->{name}, "value_$sym", sprintf('%.2f', $dv->convert($unit)));
+            $hass_topic = "sacdaq/sensor/$sensor->{name}/value_$sym" unless defined $hass_topic;
         }
     }
     else
     {
+        $hass_topic = "sacdaq/sensor/$sensor->{name}/value" unless defined $hass_topic;
         MQTTPub::publish('sensor', $sensor->{name}, 'value', $report->{VALUE});
+    }
+
+    unless (exists $hass_discovered{$sensor->{name}})
+    {
+        MQTTPub::publish_hass_discovery($sensor->{name}, $hass_topic, $report);
+        $hass_discovered{$sensor->{name}} = 1;
     }
 }
 
