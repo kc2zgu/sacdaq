@@ -67,6 +67,7 @@ for my $yaml($sensordir->children(qr/\.yaml$/))
 # wait for time sync
 
 my $use_timesync = 1;
+my $timesync_method = 'chrony';
 
 # open database
 
@@ -154,9 +155,21 @@ sub main_loop {
 }
 
 sub check_timesync {
-    logmsg "checking time sync";
+    logmsg "checking time sync ($timesync_method)";
 
-    $_[KERNEL]->delay(main_loop => 5);
+    if ($timesync_method eq 'chrony')
+    {
+        my $ret = system('chronyc', 'waitsync', 1);
+        if ($ret == 0)
+        {
+            $_[KERNEL]->delay(main_loop => 2);
+            logmsg "Time sync ready, continuing";
+        } else {
+            $_[KERNEL]->delay(check_timesync => 5);
+        }
+    } else {
+        $_[KERNEL]->delay(main_loop => 5);
+    }
 }
 
 sub read_sensor {
