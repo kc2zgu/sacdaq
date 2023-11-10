@@ -9,6 +9,7 @@ my %dims = (
     PRES => ['Pressure', 'Pascal'],
     VOLT => ['Voltage', 'Volt'],
     CURR => ['Current', 'Amp'],
+    POWR => ['Power', 'Watt'],
     );
 
 # name => [ dim, symbol, encode, decode ]
@@ -29,6 +30,7 @@ my %units = (
     Torr => ['PRES', 'Torr', sub { $_[0] / 133.3224 }, sub { $_[0] * 133.3224 }],
     Volt => ['VOLT', 'V'],
     Amp => ['CURR', 'A'],
+    Watt => ['POWR', 'W'],
     );
 
 sub new {
