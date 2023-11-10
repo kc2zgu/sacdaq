@@ -4,7 +4,7 @@ use strict;
 
 use YAML qw/LoadFile/;
 use IPC::Run qw/run/;
-use File::Slurp;
+use Path::Tiny;
 use UUID::Tiny ':std';
 use FindBin;
 
@@ -36,7 +36,7 @@ sub new {
     $self->{args} = [] unless exists $self->{args};
 
     my $uuid;
-    eval {$uuid = read_file("sensors.d/$self->{name}.uuid")};
+    eval {$uuid = path("sensors.d/$self->{name}.uuid")->slurp};
     chomp $uuid;
     if (defined $uuid && is_uuid_string($uuid))
     {
@@ -47,7 +47,7 @@ sub new {
         logmsg "No UUID found, creating a new one";
         $uuid = create_uuid_as_string();
         $self->{uuid} = $uuid;
-        write_file("sensors.d/$self->{name}.uuid", "$uuid\n");
+        path("sensors.d/$self->{name}.uuid")->spew("$uuid\n");
     }
     logmsg "UUID: $self->{uuid}";
 
