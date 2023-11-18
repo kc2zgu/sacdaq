@@ -5,6 +5,7 @@ use strict;
 use SensDrv;
 
 use Device::Chip::Adapter::LinuxKernel;
+use Time::HiRes qw/sleep/;
 
 my $sensor = SensDrv->new('AHT20', 0.01,
 			  bus => 1, chipaddr => '0x38', mode => 'TEMP');
@@ -18,16 +19,32 @@ my $proto = $adapter->make_protocol('I2C')->get();
 
 $proto->configure(addr => $addr)->get();
 
-$proto->write(pack("C*", 0xBA, 0x80, 0x00))->get();
+# initialize sensor
+$proto->write(pack("C*", 0xBE, 0x08, 0x00))->get();
+sleep 0.05;
 
-my $status = ord($proto->write_then_read(pack("C", 0x71), 1)->get());
-
+# start measurement
 $proto->write(pack("C", 0xAC, 0x33, 0x00));
-sleep 0.5;
 
-my $measurement = $proto->write_then_read("", 7)->get();
+# read the mesurment data and wait for busy flag to clear
+my $status = 128;
+my @bytes;
+while ($status & (1<<7))
+{
+    sleep 0.1;
+    my $measurement = $proto->read(7)->get();
+    if (length $measurement < 7)
+    {
+        # assume sensor not present if no data received, report bus fault
+        $sensor->set_fault('bus');
+        $sensor->report;
+        exit 1;
+    }
 
-my @bytes = unpack("C*", $measurement);
+    @bytes = unpack("C*", $measurement);
+
+    $status = $bytes[0];
+}
 
 if ($mode eq 'TEMP')
 {
